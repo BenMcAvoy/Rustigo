@@ -1,0 +1,15 @@
+[package]
+name = "rustigo"
+version = "0.1.0"
+edition = "2021"
+
+authors = [ "Ben McAvoy <ben.mcavoy@tutanota.com>" ]
+license = "MIT"
+
+description = "A Rust webserver inspired by the Go standard library's HTTPServer"
+repository = "https://github.com/BenMcAvoy/Rustigo"
+homepage = "https://github.com/BenMcAvoy/Rustigo"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
