@@ -39,9 +39,7 @@ impl Rustigo {
             let stream = match stream {
                 Ok(v) => v,
                 Err(e) => {
-                    error!(
-                        "It seems that there is an error with the TcpStream: {e}.\nQuitting now."
-                    );
+                    error!("TCP stream error: {e}.\nQuitting now.");
 
                     process::exit(1);
                 }
@@ -50,9 +48,7 @@ impl Rustigo {
             pool.execute(|| match Self::handle_connection(stream) {
                 Ok(_) => {}
                 Err(e) => {
-                    error!(
-                        "It seems that there is an error with the TcpStream: {e}.\nQuitting now."
-                    );
+                    error!("Failed to handle request: {e}.\nQuitting now.");
 
                     process::exit(1);
                 }
