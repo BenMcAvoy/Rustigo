@@ -31,14 +31,19 @@ impl Pool {
         Ok(Pool { workers, sender })
     }
 
-    pub fn execute<F>(&self, f: F)
+    pub fn execute<F>(&self, f: F) -> Result<(), String>
     where
         F: FnOnce() + Send + 'static,
     {
         let job = Box::new(f);
 
-        // TODO: Remove unwraps
-        self.sender.as_ref().unwrap().send(job).unwrap();
+        self.sender
+            .as_ref()
+            .ok_or("Failed to get sender")?
+            .send(job)
+            .map_err(|e| e.to_string())?;
+
+        Ok(())
     }
 }
 

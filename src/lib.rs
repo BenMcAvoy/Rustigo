@@ -39,7 +39,7 @@ impl Rustigo {
 
                     process::exit(1);
                 }
-            });
+            })?;
         }
 
         println!("Shutting down.");
