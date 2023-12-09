@@ -2,21 +2,33 @@
 mod log;
 
 mod macros;
+mod pattern;
 mod threadpool;
 
+use std::collections::HashMap;
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::process;
-
-pub struct Rustigo;
 
 use std::net::{TcpListener, TcpStream};
 use std::thread;
 use std::time::Duration;
 
+use pattern::Pattern;
 use threadpool::pool::Pool;
 
+pub(crate) type Route = Box<dyn Fn(TcpStream)>;
+
+#[derive(Default)]
+pub struct Rustigo {
+    routes: HashMap<Pattern, Route>,
+}
+
 impl Rustigo {
+    pub fn handle(&mut self, path: &str, func: Route) {
+        self.routes.insert(Pattern::new(path), func);
+    }
+
     pub fn listen_and_serve(&mut self, address: &str, threads: usize) -> Result<(), String> {
         info!("Listening on http://{address}");
 
