@@ -16,7 +16,7 @@ impl Worker {
             match message {
                 Ok(job) => job(),
                 Err(e) => {
-                    eprintln!("Worker message not a job {e}");
+                    error!("Worker message not a job: {e}");
                     break;
                 }
             }

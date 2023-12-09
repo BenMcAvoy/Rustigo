@@ -1,3 +1,6 @@
+#[macro_use]
+mod log;
+
 mod macros;
 mod threadpool;
 
@@ -14,15 +17,17 @@ use std::time::Duration;
 use threadpool::pool::Pool;
 
 impl Rustigo {
-    pub fn listen_and_serve(&mut self, threads: usize) -> Result<(), String> {
-        let listener = TcpListener::bind("127.0.0.1:7878").map_err(|e| e.to_string())?;
+    pub fn listen_and_serve(&mut self, address: &str, threads: usize) -> Result<(), String> {
+        info!("Listening on http://{address}");
+
+        let listener = TcpListener::bind(address).map_err(|e| e.to_string())?;
         let pool = Pool::new(threads)?;
 
         for stream in listener.incoming().take(2) {
             let stream = match stream {
                 Ok(v) => v,
                 Err(e) => {
-                    eprintln!(
+                    error!(
                         "It seems that there is an error with the TcpStream: {e}.\nQuitting now."
                     );
 
@@ -33,7 +38,7 @@ impl Rustigo {
             pool.execute(|| match Self::handle_connection(stream) {
                 Ok(_) => {}
                 Err(e) => {
-                    eprintln!(
+                    error!(
                         "It seems that there is an error with the TcpStream: {e}.\nQuitting now."
                     );
 
@@ -42,7 +47,7 @@ impl Rustigo {
             })?;
         }
 
-        println!("Shutting down.");
+        error!("Shutting down.");
 
         Ok(())
     }
