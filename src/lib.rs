@@ -15,10 +15,10 @@ use threadpool::pool::Pool;
 
 impl Rustigo {
     pub fn listen_and_serve(&mut self, threads: usize) -> Result<(), String> {
-        let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
+        let listener = TcpListener::bind("127.0.0.1:7878").map_err(|e| e.to_string())?;
         let pool = Pool::new(threads)?;
 
-        for stream in listener.incoming() {
+        for stream in listener.incoming().take(2) {
             let stream = match stream {
                 Ok(v) => v,
                 Err(e) => {
@@ -42,6 +42,8 @@ impl Rustigo {
             });
         }
 
+        println!("Shutting down.");
+
         Ok(())
     }
 
@@ -50,8 +52,6 @@ impl Rustigo {
         let request_line = buf_reader.lines().next().ok_or("No line")??;
 
         let path = request_line.split(' ').nth(1).ok_or("No path")?;
-
-        dbg!(&path);
 
         match path {
             "/" => html!(stream; "<h1>Hello from root</h1>"),

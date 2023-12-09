@@ -3,19 +3,26 @@ use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 
 pub struct Worker {
-    id: usize,
-    thread: thread::JoinHandle<()>,
+    pub(super) id: usize,
+    pub(super) thread: Option<thread::JoinHandle<()>>,
 }
 
 impl Worker {
     pub fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Job>>>) -> Worker {
         let thread = thread::spawn(move || loop {
-            let job = receiver.lock().unwrap().recv().unwrap();
+            // TODO: Remove unwraps
+            let message = receiver.lock().unwrap().recv();
 
-            println!("Worker {id} got a job; executing.");
-
-            job();
+            match message {
+                Ok(job) => job(),
+                Err(e) => {
+                    eprintln!("Worker message not a job {e}");
+                    break;
+                }
+            }
         });
+
+        let thread = Some(thread);
 
         Worker { id, thread }
     }

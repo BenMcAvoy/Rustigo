@@ -6,7 +6,7 @@ pub type Job = Box<dyn FnOnce() + Send + 'static>;
 
 pub struct Pool {
     workers: Vec<Worker>,
-    sender: mpsc::Sender<Job>,
+    sender: Option<mpsc::Sender<Job>>,
 }
 
 impl Pool {
@@ -20,6 +20,7 @@ impl Pool {
 
         let (sender, receiver) = mpsc::channel();
         let receiver = Arc::new(Mutex::new(receiver));
+        let sender = Some(sender);
 
         let mut workers = Vec::with_capacity(size);
 
@@ -36,6 +37,21 @@ impl Pool {
     {
         let job = Box::new(f);
 
-        self.sender.send(job).unwrap();
+        // TODO: Remove unwraps
+        self.sender.as_ref().unwrap().send(job).unwrap();
+    }
+}
+
+impl Drop for Pool {
+    fn drop(&mut self) {
+        drop(self.sender.take());
+
+        for worker in &mut self.workers {
+            println!("Shutting down worker {}", worker.id);
+
+            if let Some(thread) = worker.thread.take() {
+                thread.join().unwrap();
+            }
+        }
     }
 }
