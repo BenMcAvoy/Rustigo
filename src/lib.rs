@@ -11,9 +11,12 @@ use std::net::{TcpListener, TcpStream};
 use std::thread;
 use std::time::Duration;
 
+use threadpool::pool::Pool;
+
 impl Rustigo {
-    pub fn listen(&mut self) {
+    pub fn listen_and_serve(&mut self, threads: usize) -> Result<(), String> {
         let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
+        let pool = Pool::new(threads)?;
 
         for stream in listener.incoming() {
             let stream = match stream {
@@ -27,7 +30,7 @@ impl Rustigo {
                 }
             };
 
-            match self.handle_connection(stream) {
+            pool.execute(|| match Self::handle_connection(stream) {
                 Ok(_) => {}
                 Err(e) => {
                     eprintln!(
@@ -36,11 +39,13 @@ impl Rustigo {
 
                     process::exit(1);
                 }
-            }
+            });
         }
+
+        Ok(())
     }
 
-    fn handle_connection(&self, mut stream: TcpStream) -> Result<(), Box<dyn std::error::Error>> {
+    fn handle_connection(mut stream: TcpStream) -> Result<(), Box<dyn std::error::Error>> {
         let buf_reader = BufReader::new(&mut stream);
         let request_line = buf_reader.lines().next().ok_or("No line")??;
 
