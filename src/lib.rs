@@ -16,8 +16,8 @@ use std::sync::Arc;
 use std::sync::Mutex;
 
 use pattern::Pattern;
-use threadpool::pool::Pool;
 use request::Request;
+use threadpool::pool::Pool;
 
 pub(crate) type Route = Arc<dyn Fn(TcpStream) + Sync + Send>;
 
@@ -26,14 +26,11 @@ pub struct Rustigo {
 }
 
 fn get_route(routes: Arc<Mutex<HashMap<Pattern, Route>>>, key: String) -> Option<Route> {
-    // TODO: Is `cloned()` valid here?
     routes
         .lock()
         .unwrap()
         .iter()
-        .find(|(pattern, _)| pattern.matches(&key))
-        .map(|(_, route)| route)
-        .cloned()
+        .find_map(|(pattern, route)| pattern.matches(&key).then(|| route.clone()))
 }
 
 impl Default for Rustigo {
@@ -63,9 +60,9 @@ impl Rustigo {
         for stream in listener.incoming() {
             let stream = match stream {
                 Ok(v) => v,
+
                 Err(e) => {
                     error!("Failed to handle request: {e}.\nQuitting now.");
-
                     process::exit(1);
                 }
             };
@@ -73,11 +70,7 @@ impl Rustigo {
             let routes = Arc::clone(&self.routes);
             pool.execute(move || match Self::handle_connection(stream, routes) {
                 Ok(_) => {}
-                Err(e) => {
-                    error!("Failed to handle request: {e}.\nQuitting now.");
-
-                    process::exit(1);
-                }
+                Err(e) => error!("Error: {e}"),
             })?;
         }
 
@@ -86,7 +79,10 @@ impl Rustigo {
         Ok(())
     }
 
-    fn handle_connection(mut stream: TcpStream, routes: Arc<Mutex<HashMap<Pattern, Route>>>) -> Result<(), Box<dyn std::error::Error>> {
+    fn handle_connection(
+        mut stream: TcpStream,
+        routes: Arc<Mutex<HashMap<Pattern, Route>>>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let reader = BufReader::new(&mut stream);
         let lines = reader
             .lines()
@@ -98,7 +94,7 @@ impl Rustigo {
 
         match get_route(routes, request.resource) {
             Some(route) => route(stream),
-            None => html!(stream; "<h1>404 Page not found.</h1>")
+            None => html!(stream; "<h1>404 Page not found.</h1>"),
         }
 
         Ok(())
