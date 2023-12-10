@@ -1,6 +1,11 @@
 # Rustigo
 A Rust webserver inspired by the Go standard library's HTTPServer
 
+## Features:
+- Lightweight
+- Pattern matched routes
+- No dependencies
+
 ## Example
 ```rust
 use rustigo::prelude::*;
