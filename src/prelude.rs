@@ -1,4 +1,5 @@
 pub use crate::pattern::Pattern;
+pub use crate::request::Request;
 pub use crate::Rustigo;
 
 pub use crate::html;

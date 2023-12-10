@@ -1,6 +1,6 @@
 use rustigo::prelude::*;
 
-fn index(stream: TcpStream) {
+fn index(stream: TcpStream, _: Request) {
     html!(stream; "<h1>Hello, world!</h1>");
 }
 

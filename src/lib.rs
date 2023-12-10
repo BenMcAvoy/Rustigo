@@ -21,7 +21,7 @@ use pattern::Pattern;
 use request::Request;
 use threadpool::pool::Pool;
 
-pub(crate) type Route = Arc<dyn Fn(TcpStream) + Sync + Send>;
+pub(crate) type Route = Arc<dyn Fn(TcpStream, Request) + Sync + Send>;
 
 pub struct Rustigo {
     routes: Arc<Mutex<HashMap<Pattern, Route>>>,
@@ -97,7 +97,7 @@ impl Rustigo {
         info!("Resource: {}\n           └─ Responding\n", request.resource);
 
         match get_route(routes, &request.resource) {
-            Some(route) => route(stream),
+            Some(route) => route(stream, request),
             None => html!(stream; "<h1>404 Page not found.</h1>"; 404),
         }
 
