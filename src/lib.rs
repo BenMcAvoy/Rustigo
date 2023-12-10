@@ -98,7 +98,7 @@ impl Rustigo {
 
         let request = Request::new(lines)?;
 
-        info!("Resource: {}\n           └─ Responding\n", request.resource);
+        info!("Resource: {}\n           └─ Responding", request.resource);
 
         match get_route(routes, &request.resource) {
             Some(route) => route(stream, request),
