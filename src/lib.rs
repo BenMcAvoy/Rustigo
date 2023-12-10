@@ -27,12 +27,12 @@ pub struct Rustigo {
     routes: Arc<Mutex<HashMap<Pattern, Route>>>,
 }
 
-fn get_route(routes: Arc<Mutex<HashMap<Pattern, Route>>>, key: String) -> Option<Route> {
+fn get_route(routes: Arc<Mutex<HashMap<Pattern, Route>>>, key: &str) -> Option<Route> {
     routes
         .lock()
         .unwrap()
         .iter()
-        .find_map(|(pattern, route)| pattern.matches(&key).then(|| route.clone()))
+        .find_map(|(pattern, route)| pattern.matches(key).then(|| route.clone()))
 }
 
 impl Default for Rustigo {
@@ -94,7 +94,9 @@ impl Rustigo {
 
         let request = Request::new(lines)?;
 
-        match get_route(routes, request.resource) {
+        info!("Resource: {}\n           └─ Responding\n", request.resource);
+
+        match get_route(routes, &request.resource) {
             Some(route) => route(stream),
             None => html!(stream; "<h1>404 Page not found.</h1>"),
         }
