@@ -1,5 +1,6 @@
-use std::{net::TcpStream, sync::Arc, thread, time::Duration};
 use rustigo::prelude::*;
+use std::time::Duration;
+use std::thread;
 
 fn index(stream: TcpStream) {
     html!(stream; "<h1>Sleeping</h1>");

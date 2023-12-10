@@ -1,5 +1,3 @@
-use std::{net::TcpStream, sync::Arc};
-
 use rustigo::prelude::*;
 
 fn index(stream: TcpStream) {
