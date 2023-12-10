@@ -19,6 +19,6 @@ fn main() {
 
     rustigo.handle("/", Arc::new(index));
 
-    rustigo.listen_and_serve("localhost:7878", 4).unwrap();
+    rustigo.listen("localhost:7878", 4).unwrap();
 }
 ```
