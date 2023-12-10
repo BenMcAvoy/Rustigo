@@ -2,6 +2,7 @@
 mod log;
 
 mod macros;
+mod traits;
 mod pattern;
 mod request;
 mod threadpool;
@@ -17,6 +18,7 @@ use std::net::{TcpListener, TcpStream};
 use std::sync::Arc;
 use std::sync::Mutex;
 
+use traits::IntoArc;
 use pattern::Pattern;
 use request::Request;
 use threadpool::pool::Pool;
@@ -49,7 +51,8 @@ impl Rustigo {
         Self { routes }
     }
 
-    pub fn handle(&mut self, path: &str, func: Route) {
+    pub fn handle<T: IntoArc + 'static>(&mut self, path: &str, func: T) {
+        let func = func.into_arc();
         self.routes.lock().unwrap().insert(Pattern::new(path), func);
     }
 
