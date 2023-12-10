@@ -2,10 +2,10 @@
 mod log;
 
 mod macros;
-mod traits;
 mod pattern;
 mod request;
 mod threadpool;
+mod traits;
 
 pub mod prelude;
 
@@ -18,10 +18,10 @@ use std::net::{TcpListener, TcpStream};
 use std::sync::Arc;
 use std::sync::Mutex;
 
-use traits::IntoArc;
 use pattern::Pattern;
 use request::Request;
 use threadpool::pool::Pool;
+use traits::IntoArc;
 
 pub(crate) type Route = Arc<dyn Fn(TcpStream, Request) + Sync + Send>;
 
@@ -100,16 +100,22 @@ impl Rustigo {
 
         match get_route(routes, &request.resource) {
             Some(route) => {
-                info!("200: {}\n           └─ Response succeeded", request.resource);
+                info!(
+                    "200: {}\n           └─ Response succeeded",
+                    request.resource
+                );
 
                 route(stream, request)
-            },
+            }
 
             None => {
-                warn!("404: {}\n           └─ Response succeeded", request.resource);
+                warn!(
+                    "404: {}\n           └─ Response succeeded",
+                    request.resource
+                );
 
                 html!(stream; "<h1>404 Page not found.</h1>"; 404)
-            },
+            }
         }
 
         Ok(())
