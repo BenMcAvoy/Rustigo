@@ -12,7 +12,7 @@ macro_rules! info {
    };
 }
 
-macro_rules! log {
+macro_rules! warn {
    ($($arg:tt)*) => {
        println!("\x1b[34m[  WARN ]\x1b[0m {}", format_args!($($arg)*))
    };
