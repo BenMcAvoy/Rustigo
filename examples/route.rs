@@ -1,6 +1,6 @@
 use std::{net::TcpStream, sync::Arc};
 
-use rustigo::{html, Rustigo};
+use rustigo::prelude::*;
 
 fn index(stream: TcpStream) {
     html!(stream; "<h1>Hello, world!</h1>");

@@ -6,6 +6,8 @@ mod pattern;
 mod request;
 mod threadpool;
 
+pub mod prelude;
+
 use std::collections::HashMap;
 use std::io::prelude::*;
 use std::io::BufReader;

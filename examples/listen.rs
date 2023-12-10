@@ -1,4 +1,4 @@
-use rustigo::Rustigo;
+use rustigo::prelude::*;
 
 fn main() {
     let mut rustigo = Rustigo::default();
