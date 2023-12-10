@@ -98,11 +98,18 @@ impl Rustigo {
 
         let request = Request::new(lines)?;
 
-        info!("Resource: {}\n           └─ Responding", request.resource);
-
         match get_route(routes, &request.resource) {
-            Some(route) => route(stream, request),
-            None => html!(stream; "<h1>404 Page not found.</h1>"; 404),
+            Some(route) => {
+                info!("200: {}\n           └─ Response succeeded", request.resource);
+
+                route(stream, request)
+            },
+
+            None => {
+                warn!("404: {}\n           └─ Response succeeded", request.resource);
+
+                html!(stream; "<h1>404 Page not found.</h1>"; 404)
+            },
         }
 
         Ok(())
