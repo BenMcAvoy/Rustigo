@@ -7,7 +7,7 @@ fn index(stream: TcpStream, _: Request) {
 fn main() {
     let mut rustigo = Rustigo::default();
 
-    rustigo.handle("/", Arc::new(index));
+    rustigo.handle("/", index);
 
     rustigo.listen_and_serve("localhost:7878", 4).unwrap();
 }

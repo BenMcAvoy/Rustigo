@@ -1,6 +1,6 @@
 use rustigo::prelude::*;
-use std::time::Duration;
 use std::thread;
+use std::time::Duration;
 
 fn index(stream: TcpStream, _: Request) {
     html!(stream; "<h1>Sleeping</h1>");
@@ -10,7 +10,7 @@ fn index(stream: TcpStream, _: Request) {
 fn main() {
     let mut rustigo = Rustigo::default();
 
-    rustigo.handle("/", Arc::new(index));
+    rustigo.handle("/", index);
 
     rustigo.listen_and_serve("localhost:7878", 4).unwrap();
 }
