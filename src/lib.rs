@@ -56,7 +56,7 @@ impl Rustigo {
         self.routes.lock().unwrap().insert(Pattern::new(path), func);
     }
 
-    pub fn listen_and_serve(&mut self, address: &str, threads: usize) -> Result<(), String> {
+    pub fn listen(&mut self, address: &str, threads: usize) -> Result<(), String> {
         info!("Listening on http://{address}");
 
         let listener = TcpListener::bind(address).map_err(|e| e.to_string())?;
