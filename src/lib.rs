@@ -98,7 +98,7 @@ impl Rustigo {
 
         match get_route(routes, &request.resource) {
             Some(route) => route(stream),
-            None => html!(stream; "<h1>404 Page not found.</h1>"),
+            None => html!(stream; "<h1>404 Page not found.</h1>"; 404),
         }
 
         Ok(())
