@@ -3,6 +3,7 @@ mod log;
 
 mod macros;
 mod pattern;
+mod request;
 mod threadpool;
 
 use std::collections::HashMap;
@@ -11,22 +12,46 @@ use std::io::BufReader;
 use std::process;
 
 use std::net::{TcpListener, TcpStream};
-use std::thread;
-use std::time::Duration;
+use std::sync::Arc;
+use std::sync::Mutex;
 
 use pattern::Pattern;
 use threadpool::pool::Pool;
+use request::Request;
 
-pub(crate) type Route = Box<dyn Fn(TcpStream)>;
+pub(crate) type Route = Arc<dyn Fn(TcpStream) + Sync + Send>;
 
-#[derive(Default)]
 pub struct Rustigo {
-    routes: HashMap<Pattern, Route>,
+    routes: Arc<Mutex<HashMap<Pattern, Route>>>,
+}
+
+fn get_route(routes: Arc<Mutex<HashMap<Pattern, Route>>>, key: String) -> Option<Route> {
+    // TODO: Is `cloned()` valid here?
+    routes
+        .lock()
+        .unwrap()
+        .iter()
+        .find(|(pattern, _)| pattern.matches(&key))
+        .map(|(_, route)| route)
+        .cloned()
+}
+
+impl Default for Rustigo {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Rustigo {
+    pub fn new() -> Self {
+        let routes = HashMap::default();
+        let routes = Arc::new(Mutex::new(routes));
+
+        Self { routes }
+    }
+
     pub fn handle(&mut self, path: &str, func: Route) {
-        self.routes.insert(Pattern::new(path), func);
+        self.routes.lock().unwrap().insert(Pattern::new(path), func);
     }
 
     pub fn listen_and_serve(&mut self, address: &str, threads: usize) -> Result<(), String> {
@@ -35,17 +60,18 @@ impl Rustigo {
         let listener = TcpListener::bind(address).map_err(|e| e.to_string())?;
         let pool = Pool::new(threads)?;
 
-        for stream in listener.incoming().take(2) {
+        for stream in listener.incoming() {
             let stream = match stream {
                 Ok(v) => v,
                 Err(e) => {
-                    error!("TCP stream error: {e}.\nQuitting now.");
+                    error!("Failed to handle request: {e}.\nQuitting now.");
 
                     process::exit(1);
                 }
             };
 
-            pool.execute(|| match Self::handle_connection(stream) {
+            let routes = Arc::clone(&self.routes);
+            pool.execute(move || match Self::handle_connection(stream, routes) {
                 Ok(_) => {}
                 Err(e) => {
                     error!("Failed to handle request: {e}.\nQuitting now.");
@@ -60,21 +86,19 @@ impl Rustigo {
         Ok(())
     }
 
-    fn handle_connection(mut stream: TcpStream) -> Result<(), Box<dyn std::error::Error>> {
-        let buf_reader = BufReader::new(&mut stream);
-        let request_line = buf_reader.lines().next().ok_or("No line")??;
+    fn handle_connection(mut stream: TcpStream, routes: Arc<Mutex<HashMap<Pattern, Route>>>) -> Result<(), Box<dyn std::error::Error>> {
+        let reader = BufReader::new(&mut stream);
+        let lines = reader
+            .lines()
+            .map(|l| l.unwrap())
+            .take_while(|l| !l.is_empty())
+            .collect();
 
-        let path = request_line.split(' ').nth(1).ok_or("No path")?;
+        let request = Request::new(lines)?;
 
-        match path {
-            "/" => html!(stream; "<h1>Hello from root</h1>"),
-
-            "/sleep" => {
-                thread::sleep(Duration::from_secs(5));
-                html!(stream; "<h1>Hello from root</h1>")
-            }
-
-            _ => html!(stream; "<h1>404 Page not found</h1>"; 404),
+        match get_route(routes, request.resource) {
+            Some(route) => route(stream),
+            None => html!(stream; "<h1>404 Page not found.</h1>")
         }
 
         Ok(())
