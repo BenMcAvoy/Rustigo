@@ -51,9 +51,10 @@ impl Rustigo {
         Self { routes }
     }
 
-    pub fn handle<T: IntoArc + 'static>(&mut self, path: &str, func: T) {
+    pub fn handle<T: IntoArc + 'static>(&mut self, path: &str, func: T) -> &mut Self {
         let func = func.into_arc();
         self.routes.lock().unwrap().insert(Pattern::new(path), func);
+        self
     }
 
     pub fn listen(&mut self, address: &str, threads: usize) -> Result<(), String> {
