@@ -110,7 +110,7 @@ impl Rustigo {
 
             None => {
                 warn!(
-                    "404: {}\n           └─ Response succeeded",
+                    "404: {}\n           └─ Response failed: 404 Page not found.",
                     request.resource
                 );
 
