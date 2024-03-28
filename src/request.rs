@@ -1,3 +1,4 @@
+/// Request struct
 #[derive(Debug)]
 pub struct Request {
     pub user_agent: String,
@@ -6,6 +7,8 @@ pub struct Request {
 }
 
 impl Request {
+    /// Create a new Request struct.
+    /// This will "parse" the raw request and create a Request struct.
     pub fn new(raw: Vec<String>) -> Result<Self, String> {
         let user_agent = raw
             .iter()

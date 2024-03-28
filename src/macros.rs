@@ -1,3 +1,8 @@
+/// A macro to return html content to a TCPStream.
+/// Example usage:
+/// ```rust
+/// html!(stream; "<h1>Hello, World!</h1>");
+/// ```
 #[macro_export]
 macro_rules! html {
     ($stream:expr; $body:expr) => {{
@@ -25,6 +30,11 @@ macro_rules! html {
     }};
 }
 
+/// A macro to return text content to a TCPStream.
+/// Example usage:
+/// ```rust
+/// text!(stream; "https://cdn.mysite.com/custom_generated_link_here");
+/// ```
 #[macro_export]
 macro_rules! text {
     ($stream:expr; $body:expr) => {{

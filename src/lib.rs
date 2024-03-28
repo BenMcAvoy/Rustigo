@@ -1,3 +1,22 @@
+//! Rustigo is a simple web server that allows you to handle requests with ease.
+//!
+//! # Example usage:
+//! ```rust
+//! use rustigo::prelude::*;
+//!
+//! fn index(stream: TcpStream, _: Request) {
+//!     html!(stream; "<h1>Hello, world!</h1>");
+//! }
+//!
+//! fn main() {
+//!     let mut rustigo = Rustigo::default();
+//!
+//!     rustigo.handle("/", Arc::new(index));
+//!
+//!     rustigo.listen("localhost:7878", 4).unwrap();
+//! }
+//! ```
+
 #[macro_use]
 mod log;
 
@@ -23,12 +42,16 @@ use request::Request;
 use threadpool::pool::Pool;
 use traits::IntoArc;
 
+/// A route is a function that takes a TcpStream and a Request and writes a response to the stream.
 pub(crate) type Route = Arc<dyn Fn(TcpStream, Request) + Sync + Send>;
 
+/// Rustigo is a simple web server that allows you to handle requests with ease.
+/// It's a rust webserver inspired by the Go standard library's HTTPServer.
 pub struct Rustigo {
     routes: Arc<Mutex<HashMap<Pattern, Route>>>,
 }
 
+/// Get the route that matches the given key (resource).
 fn get_route(routes: Arc<Mutex<HashMap<Pattern, Route>>>, key: &str) -> Option<Route> {
     routes
         .lock()
@@ -44,6 +67,7 @@ impl Default for Rustigo {
 }
 
 impl Rustigo {
+    /// Create a new Rustigo instance.
     pub fn new() -> Self {
         let routes = HashMap::default();
         let routes = Arc::new(Mutex::new(routes));
@@ -51,12 +75,17 @@ impl Rustigo {
         Self { routes }
     }
 
+    /// Handle a request at the given path.
+    /// The path is a string that represents the path of the request.
+    /// If a handler is found, it will be a function of type `Route`.
     pub fn handle<T: IntoArc + 'static>(&mut self, path: &str, func: T) -> &mut Self {
         let func = func.into_arc();
         self.routes.lock().unwrap().insert(Pattern::new(path), func);
         self
     }
 
+    /// Listen on the given address.
+    /// The amount of `threads` is the number of threads that will be given to the threadpool.
     pub fn listen(&mut self, address: &str, threads: usize) -> Result<(), String> {
         info!("Listening on http://{address}");
 
@@ -85,6 +114,7 @@ impl Rustigo {
         Ok(())
     }
 
+    /// Handle a connection from a client.
     fn handle_connection(
         mut stream: TcpStream,
         routes: Arc<Mutex<HashMap<Pattern, Route>>>,

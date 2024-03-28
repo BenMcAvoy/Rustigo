@@ -2,8 +2,10 @@ use std::sync::{mpsc, Arc, Mutex};
 
 use crate::threadpool::worker::Worker;
 
+/// A job is a function that can be executed by a thread in the thread pool.
 pub type Job = Box<dyn FnOnce() + Send + 'static>;
 
+/// A thread pool that can execute jobs.
 pub struct Pool {
     workers: Vec<Worker>,
     sender: Option<mpsc::Sender<Job>>,
@@ -31,6 +33,7 @@ impl Pool {
         Ok(Pool { workers, sender })
     }
 
+    /// Execute a function (job) on the thread pool.
     pub fn execute<F>(&self, f: F) -> Result<(), String>
     where
         F: FnOnce() + Send + 'static,
@@ -48,6 +51,7 @@ impl Pool {
 }
 
 impl Drop for Pool {
+    /// Close all workers when the thread pool is dropped.
     fn drop(&mut self) {
         drop(self.sender.take());
 

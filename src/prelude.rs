@@ -1,3 +1,5 @@
+/// This module contains the prelude for the library.
+
 pub use crate::pattern::Pattern;
 pub use crate::request::Request;
 pub use crate::Rustigo;
