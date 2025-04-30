@@ -4,6 +4,7 @@ pub struct Request {
     pub user_agent: String,
     pub resource: String,
     pub mode: String,
+    pub content_length: Option<usize>,
 }
 
 impl Request {
@@ -34,10 +35,19 @@ impl Request {
             .ok_or("Failed to get resource.")?
             .to_string();
 
+        let content_length = raw
+            .iter()
+            .find(|x| x.contains("Content-Length: "))
+            .and_then(|x| {
+                x.strip_prefix("Content-Length: ")
+                    .and_then(|x| x.parse::<usize>().ok())
+            });
+
         Ok(Self {
             user_agent,
             resource,
             mode,
+            content_length,
         })
     }
 }
